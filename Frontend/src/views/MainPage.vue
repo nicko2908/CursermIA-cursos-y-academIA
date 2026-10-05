@@ -275,8 +275,8 @@ const cursosDestacados = [
     descripcion:
       'Aprende a recolectar, limpiar e interpretar datos para tomar decisiones con evidencia. Domina técnicas cualitativas y cuantitativas aplicadas a casos reales.',
     modalidad: 'virtual',
-    fechaInicio: '2026-02-03',
-    fechaFin: '2026-06-20',
+    fechaInicio: '2026-08-15',
+    fechaFin: '2026-12-20',
     imagen: null, // importa tu imagen y asígnala aquí
   },
   {
@@ -284,8 +284,8 @@ const cursosDestacados = [
     descripcion:
       'Construye aplicaciones completas: maquetación, APIs, bases de datos y despliegue. Un recorrido práctico por frontend y backend con proyectos reales.',
     modalidad: 'presencial',
-    fechaInicio: '2026-02-10',
-    fechaFin: '2026-07-01',
+    fechaInicio: '2026-06-03',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -293,8 +293,8 @@ const cursosDestacados = [
     descripcion:
       'Desarrolla apps nativas para Android desde cero con Kotlin y Android Studio: interfaces, arquitectura, consumo de APIs y publicación en Play Store.',
     modalidad: 'presencial',
-    fechaInicio: '2026-03-02',
-    fechaFin: '2026-07-15',
+    fechaInicio: '2026-07-10',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
 ]

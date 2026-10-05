@@ -1,7 +1,7 @@
 <template>
   <q-layout view="hHh lpR fFf">
     <!-- Navbar: logo + título + tabs + usuario, todo al mismo nivel -->
-    <q-header elevated class="bg-primary">
+    <q-header elevated class="header-app">
       <div class="navbar">
         <div class="navbar-brand cursor-pointer" @click="irA('/dashboard/alumno')">
           <img :src="logoCursemia" alt="Logo CursemIA" class="navbar-logo" />

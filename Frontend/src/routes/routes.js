@@ -9,6 +9,7 @@ import AlumnoMisTareas from "../views/AlumnoMisTareas.vue"
 import AlumnoMisCalificaciones from "../views/AlumnoMisCalificaciones.vue"
 import AlumnoCronograma from "../views/AlumnoCronograma.vue"
 import AlumnoCursos from "../views/AlumnoCursos.vue"
+import AlumnoCursoDetalle from "../views/AlumnoCursoDetalle.vue"
 import MainPageDocente from "../views/MainPageDocente.vue"
 import DocenteMisCursos from "../views/DocenteMisCursos.vue"
 import DocenteTrabajos from "../views/DocenteTrabajos.vue"
@@ -35,7 +36,8 @@ const routes = [
             {path:"tareas", component:AlumnoMisTareas},
             {path:"cronograma", component:AlumnoCronograma},
             {path:"calificaciones", component:AlumnoMisCalificaciones},
-            {path:"cursos", component:AlumnoCursos}
+            {path:"cursos", component:AlumnoCursos},
+            {path:"curso/:nombre", component:AlumnoCursoDetalle}
         ]
     },
     {

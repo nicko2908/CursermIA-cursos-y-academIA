@@ -19,28 +19,41 @@
         <h2 class="text-h5 text-weight-bold text-white q-mb-md">
           Cursos a los que pertenezco
         </h2>
-        <div class="row q-gutter-md">
-          <q-card
+        <div class="cursos-grid">
+          <article
             v-for="curso in cursosInscritos"
             :key="curso.nombre"
-            class="col-12 col-sm-6 col-md-4"
+            class="curso-card"
+            @click="abrirCurso(curso)"
           >
-            <q-card-section>
-              <div class="text-h6">{{ curso.nombre }}</div>
-              <div v-if="curso.modalidad" class="text-caption text-grey-7">
-                Modalidad: {{ curso.modalidad }}
+            <div class="curso-top" :style="{ background: colorCurso(curso.nombre) }"></div>
+            <div class="curso-body">
+              <div class="curso-nombre">{{ curso.nombre }}</div>
+
+              <div class="curso-meta">
+                <span v-if="curso.docente">
+                  <q-icon name="person" size="16px" />
+                  Profe {{ curso.docente }}
+                </span>
+                <span v-if="curso.modalidad">
+                  <q-icon
+                    :name="curso.modalidad === 'virtual' ? 'wifi' : 'location_on'"
+                    size="16px"
+                  />
+                  {{ curso.modalidad === 'virtual' ? 'Virtual' : 'Presencial' }}
+                </span>
               </div>
-              <div v-if="curso.docente" class="text-caption text-grey-7">
-                Profe {{ curso.docente }}
-              </div>
-              <div v-if="curso.nivel" class="text-caption text-grey-7">
-                Nivel {{ curso.nivel }}
-              </div>
-              <div v-if="curso.fechaInicio" class="text-caption text-grey-7">
+
+              <div v-if="curso.fechaInicio" class="curso-fechas">
                 Del {{ formatoFecha(curso.fechaInicio) }} al {{ formatoFecha(curso.fechaFin) }}
               </div>
-            </q-card-section>
-          </q-card>
+
+              <div class="curso-ver">
+                Ver curso
+                <q-icon name="arrow_forward" size="16px" />
+              </div>
+            </div>
+          </article>
         </div>
       </div>
 
@@ -81,10 +94,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
 import { cursosCatalogo } from '../data/cursosCatalogo.js'
+import { colorCurso } from '../utils/cursos.js'
 
+const router = useRouter()
 const auth = useAuthStore()
 
 const cursosDB = ref([])
@@ -121,8 +137,8 @@ const cursosInscritos = computed(() => {
       modalidad: cat?.modalidad || null,
       docente: cat?.docente || s.docenteNombre,
       nivel: cat?.nivel || null,
-      fechaInicio: null,
-      fechaFin: null,
+      fechaInicio: cat?.fechaInicio || null,
+      fechaFin: cat?.fechaFin || null,
     })
   }
 
@@ -140,6 +156,10 @@ function formatoFecha(f) {
     month: 'short',
     day: 'numeric',
   })
+}
+
+function abrirCurso(curso) {
+  router.push(`/dashboard/alumno/curso/${encodeURIComponent(curso.nombre)}`)
 }
 
 onMounted(async () => {
@@ -173,6 +193,83 @@ onMounted(async () => {
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* ===== Cards de cursos (oscuras, clicables) ===== */
+.cursos-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.curso-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #0d1729;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.curso-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.45);
+  border-color: rgba(32, 100, 227, 0.5);
+}
+
+.curso-top {
+  height: 8px;
+}
+
+.curso-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  padding: 18px 20px;
+}
+
+.curso-nombre {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ffffff;
+}
+
+.curso-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.curso-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.curso-meta .q-icon {
+  color: var(--color-terciario, #4f85f0);
+}
+
+.curso-fechas {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.curso-ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+  color: #6fd6ff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 .lista-pendientes {
   max-width: 720px;
 }
@@ -195,5 +292,17 @@ onMounted(async () => {
 .vacio p {
   margin: 0;
   font-size: 1.05rem;
+}
+
+@media (min-width: 700px) {
+  .cursos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .cursos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 </style>

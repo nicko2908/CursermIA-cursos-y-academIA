@@ -6,7 +6,7 @@
         Resolvemos las dudas más comunes sobre CursemIA.
       </p>
 
-      <q-list bordered class="faq-list q-mt-lg">
+      <q-list class="faq-list q-mt-lg" separator>
         <q-expansion-item
           v-for="item in faqs"
           :key="item.pregunta"
@@ -14,9 +14,7 @@
           expand-icon="add"
           expanded-icon="remove"
         >
-          <q-card>
-            <q-card-section>{{ item.respuesta }}</q-card-section>
-          </q-card>
+          <div class="faq-respuesta">{{ item.respuesta }}</div>
         </q-expansion-item>
       </q-list>
     </section>
@@ -63,9 +61,20 @@ const faqs = [
 .subtitle {
   color: rgba(255, 255, 255, 0.8);
 }
+/* Lista de FAQs como card blanca flotante */
 .faq-list {
   max-width: 720px;
   margin: 0 auto;
-  color: rgba(0, 0, 0, 0.87);
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.faq-respuesta {
+  padding: 4px 16px 16px;
+  color: rgba(0, 0, 0, 0.7);
+  line-height: 1.6;
 }
 </style>

@@ -1,4 +1,5 @@
 // Catálogo de cursos (estático). Compartido por la vista pública y el dashboard.
+// Las fechas están pensadas para que los cursos estén en curso (terminan a finales de 2026).
 // Cuando tengas las imágenes, impórtalas y asígnalas en `imagen`.
 export const cursosCatalogo = [
   {
@@ -6,6 +7,8 @@ export const cursosCatalogo = [
     docente: 'Camila Restrepo',
     nivel: 'Básico',
     modalidad: 'virtual',
+    fechaInicio: '2026-07-27',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -13,6 +16,8 @@ export const cursosCatalogo = [
     docente: 'Mateo Benítez',
     nivel: 'Intermedio',
     modalidad: 'presencial',
+    fechaInicio: '2026-06-03',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -20,6 +25,8 @@ export const cursosCatalogo = [
     docente: 'Valeria Morales',
     nivel: 'Básico',
     modalidad: 'virtual',
+    fechaInicio: '2026-07-04',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -27,6 +34,8 @@ export const cursosCatalogo = [
     docente: 'Alejandro Silva',
     nivel: 'Intermedio',
     modalidad: 'virtual',
+    fechaInicio: '2026-08-15',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -34,6 +43,8 @@ export const cursosCatalogo = [
     docente: 'Santiago Mendoza',
     nivel: 'Alto',
     modalidad: 'presencial',
+    fechaInicio: '2026-07-01',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -41,6 +52,8 @@ export const cursosCatalogo = [
     docente: 'Natalia Ibáñez',
     nivel: 'Básico',
     modalidad: 'virtual',
+    fechaInicio: '2026-08-10',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -48,6 +61,8 @@ export const cursosCatalogo = [
     docente: 'Diego Carvajal',
     nivel: 'Intermedio',
     modalidad: 'virtual',
+    fechaInicio: '2026-07-15',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -55,6 +70,8 @@ export const cursosCatalogo = [
     docente: 'Andrés Guarnizo',
     nivel: 'Básico',
     modalidad: 'virtual',
+    fechaInicio: '2026-08-20',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -62,6 +79,8 @@ export const cursosCatalogo = [
     docente: 'Elena Ramírez',
     nivel: 'Alto',
     modalidad: 'presencial',
+    fechaInicio: '2026-08-25',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -69,6 +88,8 @@ export const cursosCatalogo = [
     docente: 'Lucas Delgado',
     nivel: 'Intermedio',
     modalidad: 'virtual',
+    fechaInicio: '2026-08-05',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -76,6 +97,8 @@ export const cursosCatalogo = [
     docente: 'Sofía Cárdenas',
     nivel: 'Básico',
     modalidad: 'virtual',
+    fechaInicio: '2026-08-18',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -83,6 +106,8 @@ export const cursosCatalogo = [
     docente: 'Gabriel Torres',
     nivel: 'Intermedio',
     modalidad: 'presencial',
+    fechaInicio: '2026-09-02',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -90,6 +115,8 @@ export const cursosCatalogo = [
     docente: 'Julián Paredes',
     nivel: 'Alto',
     modalidad: 'presencial',
+    fechaInicio: '2026-06-20',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -97,6 +124,8 @@ export const cursosCatalogo = [
     docente: 'Mariana Ospina',
     nivel: 'Intermedio',
     modalidad: 'virtual',
+    fechaInicio: '2026-09-01',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
   {
@@ -104,6 +133,8 @@ export const cursosCatalogo = [
     docente: 'Daniel Hoyos',
     nivel: 'Básico',
     modalidad: 'virtual',
+    fechaInicio: '2026-08-25',
+    fechaFin: '2026-12-20',
     imagen: null,
   },
 ]
