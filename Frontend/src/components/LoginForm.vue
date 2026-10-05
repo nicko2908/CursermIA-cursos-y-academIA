@@ -119,6 +119,7 @@ async function onSubmit() {
       nombre: usuario.nombre,
       apellido: usuario.apellido,
       correo: usuario.correo,
+      fechaNacimiento: usuario.fechaNacimiento || null,
       cursos: usuario.cursos || [],
     })
 

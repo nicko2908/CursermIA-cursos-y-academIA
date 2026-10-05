@@ -147,16 +147,6 @@
             />
 
             <q-input
-              v-model="form.fechaNacimiento"
-              label="Fecha de nacimiento"
-              type="date"
-              outlined
-              dense
-              lazy-rules
-              :rules="[(v) => !!v || 'La fecha de nacimiento es obligatoria']"
-            />
-
-            <q-input
               v-model="form.correo"
               label="Correo electrónico"
               type="email"
@@ -233,7 +223,6 @@ const form = reactive({
   nombreCompleto: '',
   tipoId: 'CC',
   identificacion: '',
-  fechaNacimiento: '',
   correo: '',
 })
 
@@ -259,7 +248,8 @@ const req = computed(() => {
       (s) => s.estado === 'aprobada' && nivelDeCurso(s.cursoNombre) === reqNivel
     )
 
-  const edad = edadDesde(form.fechaNacimiento)
+  // La fecha de nacimiento se captura en el registro del aprendiz
+  const edad = edadDesde(auth.usuario?.fechaNacimiento)
   const edadOk = edad === null ? null : edad >= (c.edadMinima || 0)
 
   return { edad, edadOk, nivelOk, reqNivel, cupos }
@@ -278,7 +268,6 @@ async function inscribirse(curso) {
   form.nombreCompleto = `${u.nombre || ''} ${u.apellido || ''}`.trim()
   form.tipoId = 'CC'
   form.identificacion = u.cedula || ''
-  form.fechaNacimiento = u.fechaNacimiento ? String(u.fechaNacimiento).slice(0, 10) : ''
   form.correo = u.correo || ''
   aceptaDatos.value = false
 
@@ -304,7 +293,6 @@ function resetForm() {
   form.nombreCompleto = ''
   form.tipoId = 'CC'
   form.identificacion = ''
-  form.fechaNacimiento = ''
   form.correo = ''
   aceptaDatos.value = false
 }
@@ -342,7 +330,7 @@ async function enviarSolicitud() {
     tipoId: form.tipoId,
     numeroId: form.identificacion,
     correo: form.correo,
-    fechaNacimiento: form.fechaNacimiento || null,
+    fechaNacimiento: auth.usuario?.fechaNacimiento || null,
     edadMinima: cursoSeleccionado.value.edadMinima,
     capacidad: cursoSeleccionado.value.capacidad,
     aceptaDatos: aceptaDatos.value,

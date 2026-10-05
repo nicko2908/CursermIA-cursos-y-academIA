@@ -24,8 +24,8 @@
     <!-- Columna derecha: FORMULARIO (1fr) -->
     <div class="login-form">
       <div class="login-form-contenido">
-        <!-- Interruptor Aprendiz / Docente -->
-        <LoginRoleSwitch />
+        <!-- Interruptor Aprendiz / Docente (se puede ocultar en el registro) -->
+        <LoginRoleSwitch v-if="conSwitch" />
 
         <slot />
       </div>
@@ -35,6 +35,11 @@
 
 <script setup>
 import LoginRoleSwitch from './LoginRoleSwitch.vue'
+
+defineProps({
+  // Mostrar el interruptor Aprendiz/Docente/Coordinador (oculto en el registro)
+  conSwitch: { type: Boolean, default: true },
+})
 
 // Carga automáticamente TODAS las imágenes que coloques en src/assets/login/
 // (png, jpg, jpeg, webp, svg o gif). No hay que importarlas una por una.
@@ -88,16 +93,16 @@ const imagenes = Object.values(modulos)
 /* ===== Columna del formulario ===== */
 .login-form {
   display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 24px;
   background: var(--color-secundario);
+  overflow-y: auto;
 }
 
 /* Tarjeta flotante del formulario */
 .login-form-contenido {
   width: 100%;
   max-width: 440px;
+  margin: auto; /* centra y permite scroll si el formulario es alto */
   background: #ffffff;
   padding: 36px 32px;
   border-radius: 16px;

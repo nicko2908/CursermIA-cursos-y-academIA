@@ -3,6 +3,7 @@ import CursosView from "../views/CursosView.vue"
 import FaqsView from "../views/FaqsView.vue"
 import LoginAlumno from "../views/LoginAlumno.vue"
 import LoginDocente from "../views/LoginDocente.vue"
+import RegistroAprendiz from "../views/RegistroAprendiz.vue"
 import MainPageAlumno from "../views/MainPageAlumno.vue"
 import AlumnoMisCursos from "../views/AlumnoMisCursos.vue"
 import AlumnoMisTareas from "../views/AlumnoMisTareas.vue"
@@ -27,6 +28,7 @@ const routes = [
     {path:"/faqs", component:FaqsView},
     {path:"/login/alumno", component:LoginAlumno},
     {path:"/login/docente", component:LoginDocente},
+    {path:"/registro/alumno", component:RegistroAprendiz},
     {path:"/login/coordinador", component:LoginCoordinador},
     {
         path:"/dashboard/alumno",
