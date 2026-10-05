@@ -62,17 +62,19 @@
         <h2 class="text-h5 text-weight-bold text-white q-mb-md">
           Solicitudes pendientes
         </h2>
-        <q-list bordered separator class="lista-pendientes">
-          <q-item v-for="s in solicitudesPendientes" :key="s._id">
-            <q-item-section>
-              <q-item-label>{{ s.cursoNombre }}</q-item-label>
-              <q-item-label caption>Profe {{ s.docenteNombre }}</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-badge color="warning" rounded>Pendiente</q-badge>
-            </q-item-section>
-          </q-item>
-        </q-list>
+        <div class="lista-pendientes">
+          <div
+            v-for="s in solicitudesPendientes"
+            :key="s._id"
+            class="solicitud-pendiente"
+          >
+            <div class="col">
+              <div class="sol-curso">{{ s.cursoNombre }}</div>
+              <div class="sol-profe">Profe {{ s.docenteNombre }}</div>
+            </div>
+            <q-badge color="warning" rounded>Pendiente</q-badge>
+          </div>
+        </div>
       </div>
 
       <!-- Aún no está inscrito a ningún curso -->
@@ -271,7 +273,32 @@ onMounted(async () => {
 }
 
 .lista-pendientes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   max-width: 720px;
+}
+
+.solicitud-pendiente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #0d1729;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sol-curso {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.sol-profe {
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Estado vacío: no está inscrito a ningún curso */

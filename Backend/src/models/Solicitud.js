@@ -41,6 +41,9 @@ const solicitudSchema = new Schema(
       required: [true, 'El número de identificación es obligatorio'],
       trim: true,
     },
+    fechaNacimiento: {
+      type: Date,
+    },
     correo: {
       type: String,
       required: [true, 'El correo electrónico es obligatorio'],

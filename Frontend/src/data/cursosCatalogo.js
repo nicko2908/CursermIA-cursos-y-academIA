@@ -1,5 +1,6 @@
 // Catálogo de cursos (estático). Compartido por la vista pública y el dashboard.
 // Las fechas están pensadas para que los cursos estén en curso (terminan a finales de 2026).
+// `edadMinima` y `capacidad` se usan para validar las inscripciones.
 // Cuando tengas las imágenes, impórtalas y asígnalas en `imagen`.
 export const cursosCatalogo = [
   {
@@ -9,6 +10,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-07-27',
     fechaFin: '2026-12-20',
+    edadMinima: 15,
+    capacidad: 45,
     imagen: null,
   },
   {
@@ -18,6 +21,8 @@ export const cursosCatalogo = [
     modalidad: 'presencial',
     fechaInicio: '2026-06-03',
     fechaFin: '2026-12-20',
+    edadMinima: 16,
+    capacidad: 35,
     imagen: null,
   },
   {
@@ -27,6 +32,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-07-04',
     fechaFin: '2026-12-20',
+    edadMinima: 15,
+    capacidad: 40,
     imagen: null,
   },
   {
@@ -36,6 +43,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-08-15',
     fechaFin: '2026-12-20',
+    edadMinima: 16,
+    capacidad: 30,
     imagen: null,
   },
   {
@@ -45,6 +54,8 @@ export const cursosCatalogo = [
     modalidad: 'presencial',
     fechaInicio: '2026-07-01',
     fechaFin: '2026-12-20',
+    edadMinima: 17,
+    capacidad: 25,
     imagen: null,
   },
   {
@@ -54,6 +65,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-08-10',
     fechaFin: '2026-12-20',
+    edadMinima: 15,
+    capacidad: 40,
     imagen: null,
   },
   {
@@ -63,6 +76,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-07-15',
     fechaFin: '2026-12-20',
+    edadMinima: 16,
+    capacidad: 35,
     imagen: null,
   },
   {
@@ -72,6 +87,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-08-20',
     fechaFin: '2026-12-20',
+    edadMinima: 15,
+    capacidad: 50,
     imagen: null,
   },
   {
@@ -81,6 +98,8 @@ export const cursosCatalogo = [
     modalidad: 'presencial',
     fechaInicio: '2026-08-25',
     fechaFin: '2026-12-20',
+    edadMinima: 17,
+    capacidad: 25,
     imagen: null,
   },
   {
@@ -90,6 +109,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-08-05',
     fechaFin: '2026-12-20',
+    edadMinima: 16,
+    capacidad: 35,
     imagen: null,
   },
   {
@@ -99,6 +120,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-08-18',
     fechaFin: '2026-12-20',
+    edadMinima: 15,
+    capacidad: 45,
     imagen: null,
   },
   {
@@ -108,6 +131,8 @@ export const cursosCatalogo = [
     modalidad: 'presencial',
     fechaInicio: '2026-09-02',
     fechaFin: '2026-12-20',
+    edadMinima: 16,
+    capacidad: 30,
     imagen: null,
   },
   {
@@ -117,6 +142,8 @@ export const cursosCatalogo = [
     modalidad: 'presencial',
     fechaInicio: '2026-06-20',
     fechaFin: '2026-12-20',
+    edadMinima: 17,
+    capacidad: 25,
     imagen: null,
   },
   {
@@ -126,6 +153,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-09-01',
     fechaFin: '2026-12-20',
+    edadMinima: 16,
+    capacidad: 40,
     imagen: null,
   },
   {
@@ -135,6 +164,8 @@ export const cursosCatalogo = [
     modalidad: 'virtual',
     fechaInicio: '2026-08-25',
     fechaFin: '2026-12-20',
+    edadMinima: 15,
+    capacidad: 50,
     imagen: null,
   },
 ]

@@ -57,6 +57,11 @@
               @click="inscribirse(curso)"
             />
           </div>
+
+          <div class="curso-req">
+            <span><q-icon name="cake" size="15px" /> {{ curso.edadMinima }}+ años</span>
+            <span><q-icon name="groups" size="15px" /> Capacidad {{ curso.capacidad }}</span>
+          </div>
         </div>
       </article>
     </div>
@@ -75,6 +80,41 @@
         <q-separator />
 
         <q-card-section>
+          <!-- Requisitos del curso -->
+          <div class="requisitos q-mb-md">
+            <div class="requisitos-titulo">Requisitos</div>
+            <div
+              class="requisito"
+              :class="req.edadOk === false ? 'requisito--no' : 'requisito--ok'"
+            >
+              <q-icon
+                :name="req.edadOk === false ? 'cancel' : 'check_circle'"
+                size="16px"
+              />
+              <span>
+                Edad mínima: {{ cursoSeleccionado?.edadMinima }} años
+                <template v-if="req.edad !== null"> (tienes {{ req.edad }})</template>
+              </span>
+            </div>
+            <div
+              class="requisito"
+              :class="req.nivelOk ? 'requisito--ok' : 'requisito--no'"
+            >
+              <q-icon :name="req.nivelOk ? 'check_circle' : 'cancel'" size="16px" />
+              <span v-if="req.reqNivel">
+                Requiere un curso de nivel {{ req.reqNivel }} aprobado
+              </span>
+              <span v-else>Sin prerrequisito de nivel</span>
+            </div>
+            <div
+              class="requisito"
+              :class="req.cupos > 0 ? 'requisito--ok' : 'requisito--no'"
+            >
+              <q-icon :name="req.cupos > 0 ? 'check_circle' : 'cancel'" size="16px" />
+              <span>Cupos disponibles: {{ req.cupos }}</span>
+            </div>
+          </div>
+
           <q-form ref="formRef" class="q-gutter-md" @submit.prevent="enviarSolicitud">
             <q-input
               v-model="form.nombreCompleto"
@@ -107,6 +147,16 @@
             />
 
             <q-input
+              v-model="form.fechaNacimiento"
+              label="Fecha de nacimiento"
+              type="date"
+              outlined
+              dense
+              lazy-rules
+              :rules="[(v) => !!v || 'La fecha de nacimiento es obligatoria']"
+            />
+
+            <q-input
               v-model="form.correo"
               label="Correo electrónico"
               type="email"
@@ -135,7 +185,7 @@
             unelevated
             no-caps
             label="Enviar solicitud"
-            :disable="!aceptaDatos"
+            :disable="!aceptaDatos || req.cupos <= 0 || !req.nivelOk || req.edadOk === false"
             :loading="enviando"
             @click="enviarSolicitud"
           />
@@ -146,12 +196,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
 import { cursosCatalogo } from '../data/cursosCatalogo.js'
+import { edadDesde, nivelRequerido } from '../utils/cursos.js'
 
 defineProps({
   // En el dashboard ya hay padding del q-page, así que se puede desactivar
@@ -168,6 +219,10 @@ const formRef = ref(null)
 const aceptaDatos = ref(false)
 const enviando = ref(false)
 
+// Datos para validar requisitos
+const resumen = ref({}) // cursoNombre -> { aprobadas, pendientes, ... }
+const misSolicitudes = ref([])
+
 const opcionesId = [
   { label: 'C.C', value: 'CC' },
   { label: 'T.I', value: 'TI' },
@@ -178,10 +233,39 @@ const form = reactive({
   nombreCompleto: '',
   tipoId: 'CC',
   identificacion: '',
+  fechaNacimiento: '',
   correo: '',
 })
 
-function inscribirse(curso) {
+function nivelDeCurso(nombre) {
+  return cursosCatalogo.find((c) => c.nombre === nombre)?.nivel || null
+}
+
+// Estado de los requisitos del curso seleccionado
+const req = computed(() => {
+  const c = cursoSeleccionado.value
+  if (!c) {
+    return { edad: null, edadOk: null, nivelOk: true, reqNivel: null, cupos: 0 }
+  }
+
+  const r = resumen.value[c.nombre] || {}
+  const ocupados = (r.aprobadas || 0) + (r.pendientes || 0)
+  const cupos = Math.max(0, (c.capacidad || 0) - ocupados)
+
+  const reqNivel = nivelRequerido(c.nivel)
+  const nivelOk =
+    !reqNivel ||
+    misSolicitudes.value.some(
+      (s) => s.estado === 'aprobada' && nivelDeCurso(s.cursoNombre) === reqNivel
+    )
+
+  const edad = edadDesde(form.fechaNacimiento)
+  const edadOk = edad === null ? null : edad >= (c.edadMinima || 0)
+
+  return { edad, edadOk, nivelOk, reqNivel, cupos }
+})
+
+async function inscribirse(curso) {
   // Si no hay aprendiz logueado, manda al login
   const esAprendiz = auth.estaLogueado && auth.usuario?.rol === 'alumno'
   if (!esAprendiz) {
@@ -194,25 +278,60 @@ function inscribirse(curso) {
   form.nombreCompleto = `${u.nombre || ''} ${u.apellido || ''}`.trim()
   form.tipoId = 'CC'
   form.identificacion = u.cedula || ''
+  form.fechaNacimiento = u.fechaNacimiento ? String(u.fechaNacimiento).slice(0, 10) : ''
   form.correo = u.correo || ''
   aceptaDatos.value = false
 
   cursoSeleccionado.value = curso
   modalAbierto.value = true
+
+  // Traer cupos del curso y solicitudes del aprendiz para evaluar requisitos
+  try {
+    const [resResumen, resSol] = await Promise.all([
+      api.get('/solicitudes/resumen'),
+      api.get(`/solicitudes/aprendiz/${u.cedula}`),
+    ])
+    const map = {}
+    for (const r of resResumen.data || []) map[r.cursoNombre] = r
+    resumen.value = map
+    misSolicitudes.value = resSol.data || []
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 function resetForm() {
   form.nombreCompleto = ''
   form.tipoId = 'CC'
   form.identificacion = ''
+  form.fechaNacimiento = ''
   form.correo = ''
   aceptaDatos.value = false
+}
+
+function avisoRequisito(mensaje) {
+  $q.notify({ type: 'warning', message: mensaje, position: 'top' })
 }
 
 async function enviarSolicitud() {
   if (!aceptaDatos.value) return
   const valido = await formRef.value.validate()
   if (!valido) return
+
+  // Validación de requisitos (además del backend)
+  if (req.value.cupos <= 0) {
+    return avisoRequisito('Este curso ya no tiene cupos disponibles.')
+  }
+  if (req.value.edadOk === false) {
+    return avisoRequisito(
+      `Debes tener al menos ${cursoSeleccionado.value.edadMinima} años para inscribirte.`
+    )
+  }
+  if (!req.value.nivelOk) {
+    return avisoRequisito(
+      `Necesitas haber aprobado un curso de nivel ${req.value.reqNivel}.`
+    )
+  }
 
   const u = auth.usuario
   const payload = {
@@ -223,6 +342,9 @@ async function enviarSolicitud() {
     tipoId: form.tipoId,
     numeroId: form.identificacion,
     correo: form.correo,
+    fechaNacimiento: form.fechaNacimiento || null,
+    edadMinima: cursoSeleccionado.value.edadMinima,
+    capacidad: cursoSeleccionado.value.capacidad,
     aceptaDatos: aceptaDatos.value,
   }
 
@@ -400,6 +522,24 @@ const cursos = cursosCatalogo
   color: currentColor;
 }
 
+.curso-req {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.curso-req span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.curso-req .q-icon {
+  color: var(--color-terciario, #4f85f0);
+}
+
 .curso-btn {
   flex: 0 0 auto;
   border-radius: 8px;
@@ -411,6 +551,39 @@ const cursos = cursosCatalogo
   width: 100%;
   max-width: 460px;
   border-radius: 14px;
+}
+
+/* Requisitos dentro del modal (card clara) */
+.requisitos {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f5f7fb;
+  border: 1px solid #e3e8f0;
+}
+
+.requisitos-titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5b6474;
+  margin-bottom: 8px;
+}
+
+.requisito {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.85rem;
+}
+
+.requisito--ok {
+  color: #1f8f4d;
+}
+
+.requisito--no {
+  color: #c0392b;
 }
 
 .campo-label {

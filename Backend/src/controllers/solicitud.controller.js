@@ -1,10 +1,24 @@
 import Solicitud from '../models/Solicitud.js'
+import Aprendiz from '../models/Aprendiz.js'
+
+// Edad en años a partir de una fecha de nacimiento
+function edadDesde(fechaNacimiento) {
+  const n = new Date(fechaNacimiento)
+  if (Number.isNaN(n.getTime())) return null
+  const hoy = new Date()
+  let edad = hoy.getFullYear() - n.getFullYear()
+  const m = hoy.getMonth() - n.getMonth()
+  if (m < 0 || (m === 0 && hoy.getDate() < n.getDate())) edad--
+  return edad
+}
 
 // POST /api/solicitudes  -> el aprendiz crea una solicitud (estado "pendiente")
+// Valida: no duplicada, cupo disponible y edad mínima.
 export const createSolicitud = async (req, res) => {
   try {
-    const { aprendizCedula, cursoNombre } = req.body
+    const { aprendizCedula, cursoNombre, fechaNacimiento, edadMinima, capacidad } = req.body
 
+    // 1) No duplicar solicitud al mismo curso
     const existente = await Solicitud.findOne({ aprendizCedula, cursoNombre })
     if (existente) {
       return res.status(409).json({
@@ -13,8 +27,42 @@ export const createSolicitud = async (req, res) => {
       })
     }
 
+    // 2) Cupos disponibles (cuenta solicitudes pendientes + aprobadas del curso)
+    if (capacidad) {
+      const ocupados = await Solicitud.countDocuments({
+        cursoNombre,
+        estado: { $in: ['pendiente', 'aprobada'] },
+      })
+      if (ocupados >= capacidad) {
+        return res
+          .status(409)
+          .json({ mensaje: `El curso "${cursoNombre}" ya no tiene cupos disponibles` })
+      }
+    }
+
+    // 3) Edad mínima
+    if (fechaNacimiento && edadMinima) {
+      const edad = edadDesde(fechaNacimiento)
+      if (edad !== null && edad < edadMinima) {
+        return res.status(400).json({
+          mensaje: `Debes tener al menos ${edadMinima} años para inscribirte en este curso`,
+        })
+      }
+    }
+
     const solicitud = new Solicitud(req.body)
     await solicitud.save()
+
+    // Guardar la fecha de nacimiento en el perfil del aprendiz si no la tenía
+    if (fechaNacimiento) {
+      await Aprendiz.updateOne(
+        {
+          _id: aprendizCedula,
+          $or: [{ fechaNacimiento: { $exists: false } }, { fechaNacimiento: null }],
+        },
+        { $set: { fechaNacimiento } }
+      )
+    }
 
     res.status(201).json(solicitud)
   } catch (error) {

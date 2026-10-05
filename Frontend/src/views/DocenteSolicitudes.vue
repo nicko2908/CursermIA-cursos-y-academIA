@@ -7,44 +7,59 @@
       <div class="q-mt-md text-grey-4">Cargando solicitudes...</div>
     </div>
 
-    <div v-else-if="solicitudes.length">
-      <q-list bordered separator class="lista-solicitudes">
-        <q-item v-for="s in solicitudes" :key="s._id">
-          <q-item-section>
-            <q-item-label class="text-weight-bold">{{ s.cursoNombre }}</q-item-label>
-            <q-item-label caption>
-              {{ s.aprendizNombre || s.aprendizCedula }} · {{ s.tipoId }} {{ s.numeroId }} ·
-              {{ s.correo }}
-            </q-item-label>
-          </q-item-section>
+    <div v-else-if="solicitudes.length" class="lista-solicitudes">
+      <div v-for="s in solicitudes" :key="s._id" class="solicitud">
+        <div class="solicitud-info">
+          <div class="solicitud-curso">{{ s.cursoNombre }}</div>
+          <div class="solicitud-datos">
+            {{ s.aprendizNombre || s.aprendizCedula }} · {{ s.tipoId }} {{ s.numeroId }} ·
+            {{ s.correo }}
+          </div>
 
-          <q-item-section side>
-            <div class="row items-center q-gutter-sm">
-              <q-badge :color="badgeEstado(s.estado)" rounded>{{ s.estado }}</q-badge>
-              <q-btn
-                v-if="s.estado === 'pendiente'"
-                color="positive"
-                unelevated
-                dense
-                no-caps
-                icon="check"
-                label="Aprobar"
-                @click="cambiarEstado(s, 'aprobada')"
-              />
-              <q-btn
-                v-if="s.estado === 'pendiente'"
-                color="negative"
-                outline
-                dense
-                no-caps
-                icon="close"
-                label="Rechazar"
-                @click="cambiarEstado(s, 'rechazada')"
-              />
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
+          <!-- Checklist de validación para el docente -->
+          <div class="solicitud-checks">
+            <span :class="checkClass(checkEdad(s))">
+              <q-icon :name="checkIcon(checkEdad(s))" size="14px" />
+              Edad: {{ edadDe(s) ?? '—' }}
+              <template v-if="cursoDe(s.cursoNombre).edadMinima">
+                (mín {{ cursoDe(s.cursoNombre).edadMinima }})
+              </template>
+            </span>
+            <span :class="checkClass(!!(s.tipoId && s.numeroId))">
+              <q-icon :name="checkIcon(!!(s.tipoId && s.numeroId))" size="14px" />
+              Documento
+            </span>
+            <span :class="checkClass(!!s.aceptaDatos)">
+              <q-icon :name="checkIcon(!!s.aceptaDatos)" size="14px" />
+              Datos autorizados
+            </span>
+          </div>
+        </div>
+
+        <div class="solicitud-acciones">
+          <q-badge :color="badgeEstado(s.estado)" rounded>{{ s.estado }}</q-badge>
+          <q-btn
+            v-if="s.estado === 'pendiente'"
+            color="positive"
+            unelevated
+            dense
+            no-caps
+            icon="check"
+            label="Aprobar"
+            @click="cambiarEstado(s, 'aprobada')"
+          />
+          <q-btn
+            v-if="s.estado === 'pendiente'"
+            color="negative"
+            outline
+            dense
+            no-caps
+            icon="close"
+            label="Rechazar"
+            @click="cambiarEstado(s, 'rechazada')"
+          />
+        </div>
+      </div>
     </div>
 
     <div v-else class="vacio">
@@ -59,11 +74,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
+import { cursosCatalogo } from '../data/cursosCatalogo.js'
+import { edadDesde } from '../utils/cursos.js'
 
 const auth = useAuthStore()
 const $q = useQuasar()
 
 const solicitudes = ref([])
+const aprendices = ref([])
 const cargando = ref(true)
 
 const nombreDocente = computed(() =>
@@ -76,12 +94,46 @@ function badgeEstado(estado) {
   return 'warning'
 }
 
+// ===== Checklist de validación =====
+function cursoDe(nombre) {
+  return cursosCatalogo.find((c) => c.nombre === nombre) || {}
+}
+
+function fechaNacDe(s) {
+  if (s.fechaNacimiento) return s.fechaNacimiento
+  const ap = aprendices.value.find((a) => a._id === s.aprendizCedula)
+  return ap?.fechaNacimiento || null
+}
+
+function edadDe(s) {
+  return edadDesde(fechaNacDe(s))
+}
+
+function checkEdad(s) {
+  const edad = edadDe(s)
+  const min = cursoDe(s.cursoNombre).edadMinima
+  if (edad === null || !min) return null
+  return edad >= min
+}
+
+function checkClass(v) {
+  if (v === null) return 'check--na'
+  return v ? 'check--ok' : 'check--no'
+}
+
+function checkIcon(v) {
+  if (v === null) return 'help_outline'
+  return v ? 'check_circle' : 'cancel'
+}
+
 async function cargar() {
   try {
-    const { data } = await api.get(
-      `/solicitudes/docente/${encodeURIComponent(nombreDocente.value)}`
-    )
-    solicitudes.value = data || []
+    const [resSol, resAp] = await Promise.all([
+      api.get(`/solicitudes/docente/${encodeURIComponent(nombreDocente.value)}`),
+      api.get('/aprendices'),
+    ])
+    solicitudes.value = resSol.data || []
+    aprendices.value = resAp.data || []
   } catch (e) {
     console.error(e)
   } finally {
@@ -112,7 +164,77 @@ onMounted(cargar)
 
 <style scoped>
 .lista-solicitudes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   max-width: 860px;
+}
+
+.solicitud {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #0d1729;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.solicitud:hover {
+  background: #101c33;
+  border-color: rgba(32, 100, 227, 0.5);
+}
+
+.solicitud-info {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.solicitud-curso {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.solicitud-datos {
+  margin-top: 4px;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.solicitud-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+}
+
+.solicitud-checks span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.check--ok {
+  color: #5fe0a0;
+}
+
+.check--no {
+  color: #ff7b7b;
+}
+
+.check--na {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.solicitud-acciones {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
 }
 
 .vacio {
