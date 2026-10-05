@@ -1,0 +1,16 @@
+COLOCA AQUÍ LAS IMÁGENES DEL LOGIN
+===================================
+
+Sube tus imágenes a esta carpeta (src/assets/login/) y aparecerán
+automáticamente en el lado izquierdo de las pantallas de login
+(tanto aprendiz como profesor).
+
+Formatos permitidos: .png, .jpg, .jpeg, .webp, .svg, .gif
+
+Recomendaciones:
+- Puedes poner 1 o varias imágenes; se acomodan en una cuadrícula.
+- Si pones una sola, ocupará todo el ancho de la columna.
+- Si tienes el servidor de desarrollo abierto y agregas una imagen nueva,
+  reinícialo (Ctrl + C y "npm run dev") para que la detecte.
+
+Nota: este archivo .txt es solo una guía, no se muestra.
