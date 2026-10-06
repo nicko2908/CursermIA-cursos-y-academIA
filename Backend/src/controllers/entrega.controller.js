@@ -32,7 +32,7 @@ export const getEntrega = async (req, res) => {
 // POST /api/entregas
 export const createEntrega = async (req, res) => {
   try {
-    const { trabajo, aprendiz } = req.body
+    const { trabajo, aprendiz, nombreArchivo, archivos } = req.body
 
     if (!trabajo || !aprendiz) {
       return res.status(400).json({ mensaje: 'Se requiere trabajo y aprendiz' })
@@ -48,7 +48,7 @@ export const createEntrega = async (req, res) => {
       return res.status(400).json({ mensaje: 'El aprendiz indicado no existe' })
     }
 
-    const nuevaEntrega = new Entrega({ trabajo, aprendiz })
+    const nuevaEntrega = new Entrega({ trabajo, aprendiz, nombreArchivo, archivos })
     await nuevaEntrega.save()
 
     res.status(201).json(nuevaEntrega)
@@ -58,6 +58,31 @@ export const createEntrega = async (req, res) => {
       return res.status(409).json({ mensaje: 'El aprendiz ya entregó este trabajo' })
     }
     res.status(400).json({ mensaje: 'Error al crear la entrega', error: error.message })
+  }
+}
+
+// PUT /api/entregas/:id/calificacion  -> { calificacion: 0..100 }
+export const updateCalificacionEntrega = async (req, res) => {
+  try {
+    const nota = Number(req.body.calificacion)
+
+    if (Number.isNaN(nota) || nota < 0 || nota > 100) {
+      return res.status(400).json({ mensaje: 'La calificación debe estar entre 0 y 100' })
+    }
+
+    const entrega = await Entrega.findByIdAndUpdate(
+      req.params.id,
+      { calificacion: nota },
+      { new: true }
+    ).populate('aprendiz')
+
+    if (!entrega) {
+      return res.status(404).json({ mensaje: 'Entrega no encontrada' })
+    }
+
+    res.json(entrega)
+  } catch (error) {
+    res.status(400).json({ mensaje: 'Error al calificar la entrega', error: error.message })
   }
 }
 

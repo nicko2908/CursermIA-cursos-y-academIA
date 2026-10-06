@@ -57,8 +57,13 @@ const solicitudSchema = new Schema(
     },
     estado: {
       type: String,
-      enum: ['pendiente', 'aprobada', 'rechazada'],
+      enum: ['pendiente', 'aprobada', 'rechazada', 'baja_pendiente', 'baja'],
       default: 'pendiente',
+    },
+    motivoBaja: {
+      type: String,
+      default: '',
+      trim: true,
     },
   },
   { timestamps: true }

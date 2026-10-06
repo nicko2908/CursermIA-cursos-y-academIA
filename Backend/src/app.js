@@ -7,6 +7,7 @@ import cursoRoutes from './routes/curso.routes.js'
 import trabajoRoutes from './routes/trabajo.routes.js'
 import entregaRoutes from './routes/entrega.routes.js'
 import solicitudRoutes from './routes/solicitud.routes.js'
+import eventoRoutes from './routes/evento.routes.js'
 
 const app = express()
 
@@ -39,6 +40,7 @@ app.use('/api/cursos', cursoRoutes)
 app.use('/api/trabajos', trabajoRoutes)
 app.use('/api/entregas', entregaRoutes)
 app.use('/api/solicitudes', solicitudRoutes)
+app.use('/api/eventos', eventoRoutes)
 
 // ===== Manejo de rutas no encontradas =====
 app.use((req, res) => {

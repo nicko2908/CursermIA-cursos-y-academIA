@@ -73,8 +73,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
 import { cursosCatalogo } from '../data/cursosCatalogo.js'
 import { colorCurso, hashTexto } from '../utils/cursos.js'
@@ -82,6 +83,8 @@ import { colorCurso, hashTexto } from '../utils/cursos.js'
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
+
+const cursosBackend = ref([])
 
 const nombreCurso = computed(() => {
   const p = route.params.nombre
@@ -92,12 +95,21 @@ const nombreCurso = computed(() => {
   }
 })
 
-const curso = computed(
-  () =>
-    cursosCatalogo.find((c) => c.nombre === nombreCurso.value) || {
-      nombre: nombreCurso.value,
-    }
-)
+const curso = computed(() => {
+  const encontrado =
+    cursosCatalogo.find((c) => c.nombre === nombreCurso.value) ||
+    cursosBackend.value.find((c) => c.nombre === nombreCurso.value)
+  return encontrado || { nombre: nombreCurso.value }
+})
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/cursos')
+    cursosBackend.value = data || []
+  } catch (e) {
+    console.error(e)
+  }
+})
 
 const aula = computed(() => {
   if (!curso.value?.modalidad) return 'Aula por confirmar'
@@ -124,7 +136,8 @@ const tareas = computed(() =>
 
 function formatoFecha(f) {
   if (!f) return ''
-  return new Date(`${f}T00:00:00`).toLocaleDateString('es-CO', {
+  const base = String(f).slice(0, 10)
+  return new Date(`${base}T00:00:00`).toLocaleDateString('es-CO', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

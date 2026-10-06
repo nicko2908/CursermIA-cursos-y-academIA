@@ -8,7 +8,12 @@
     </div>
 
     <div v-else class="cursos-grid">
-      <article v-for="curso in misCursos" :key="curso.nombre" class="curso-card">
+      <article
+        v-for="curso in misCursos"
+        :key="curso.nombre"
+        class="curso-card"
+        @click="abrirCurso(curso)"
+      >
         <div class="curso-head">
           <div class="curso-nombre">{{ curso.nombre }}</div>
           <span
@@ -59,33 +64,51 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
 import { cursosCatalogo } from '../data/cursosCatalogo.js'
 import { cursosCoordinador } from '../data/cursosCoordinador.js'
 
+const router = useRouter()
 const auth = useAuthStore()
+
+function abrirCurso(curso) {
+  router.push(`/dashboard/docente/curso/${encodeURIComponent(curso.nombre)}`)
+}
 const resumen = ref({}) // cursoNombre -> solicitudes aprobadas
+const cursosBackend = ref([])
 
 const nombreDocente = computed(() =>
   `${auth.usuario?.nombre || ''} ${auth.usuario?.apellido || ''}`.trim()
 )
 
-// Cursos que dicta el docente: se cruzan los datos ricos del coordinador
-// con el catálogo, filtrando por el nombre del docente logueado.
+// Cursos que dicta el docente: datos del coordinador + catálogo + cursos creados en el backend
 const misCursos = computed(() => {
   const lista = [...cursosCoordinador]
+
   for (const c of cursosCatalogo) {
     if (!lista.some((x) => x.nombre === c.nombre)) {
+      lista.push({ ...c, porcentaje: null, estudiantesBase: null })
+    }
+  }
+
+  for (const c of cursosBackend.value) {
+    if (c.activo === false) continue
+    if (!lista.some((x) => x.nombre === c.nombre)) {
       lista.push({
-        ...c,
-        fechaInicio: null,
-        fechaFin: null,
+        nombre: c.nombre,
+        docente: c.docente || '',
+        modalidad: c.modalidad,
+        nivel: c.nivel || 'Básico',
+        fechaInicio: c.fechaInicio ? String(c.fechaInicio).slice(0, 10) : null,
+        fechaFin: c.fechaFin ? String(c.fechaFin).slice(0, 10) : null,
         porcentaje: null,
-        estudiantesBase: null,
+        estudiantesBase: 0,
       })
     }
   }
+
   return lista.filter((c) => c.docente === nombreDocente.value)
 })
 
@@ -104,10 +127,14 @@ function formatoFecha(f) {
 
 onMounted(async () => {
   try {
-    const { data } = await api.get('/solicitudes/resumen')
+    const [resResumen, resCursos] = await Promise.all([
+      api.get('/solicitudes/resumen'),
+      api.get('/cursos'),
+    ])
     const map = {}
-    for (const r of data || []) map[r.cursoNombre] = r.aprobadas || 0
+    for (const r of resResumen.data || []) map[r.cursoNombre] = r.aprobadas || 0
     resumen.value = map
+    cursosBackend.value = resCursos.data || []
   } catch (e) {
     console.error(e)
   }
@@ -129,6 +156,7 @@ onMounted(async () => {
   border-radius: 16px;
   background: #0d1729;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 

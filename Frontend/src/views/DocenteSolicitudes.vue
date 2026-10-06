@@ -16,8 +16,8 @@
             {{ s.correo }}
           </div>
 
-          <!-- Checklist de validación para el docente -->
-          <div class="solicitud-checks">
+          <!-- Checklist de validación (solo inscripciones) -->
+          <div v-if="s.estado === 'pendiente'" class="solicitud-checks">
             <span :class="checkClass(checkEdad(s))">
               <q-icon :name="checkIcon(checkEdad(s))" size="14px" />
               Edad: {{ edadDe(s) ?? '—' }}
@@ -34,30 +34,58 @@
               Datos autorizados
             </span>
           </div>
+
+          <!-- Motivo de baja -->
+          <div v-if="s.estado === 'baja_pendiente' && s.motivoBaja" class="solicitud-motivo">
+            <q-icon name="logout" size="14px" />
+            Motivo de baja: "{{ s.motivoBaja }}"
+          </div>
         </div>
 
         <div class="solicitud-acciones">
-          <q-badge :color="badgeEstado(s.estado)" rounded>{{ s.estado }}</q-badge>
-          <q-btn
-            v-if="s.estado === 'pendiente'"
-            color="positive"
-            unelevated
-            dense
-            no-caps
-            icon="check"
-            label="Aprobar"
-            @click="cambiarEstado(s, 'aprobada')"
-          />
-          <q-btn
-            v-if="s.estado === 'pendiente'"
-            color="negative"
-            outline
-            dense
-            no-caps
-            icon="close"
-            label="Rechazar"
-            @click="cambiarEstado(s, 'rechazada')"
-          />
+          <q-badge :color="badgeEstado(s.estado)" rounded>{{ etiquetaEstado(s.estado) }}</q-badge>
+
+          <template v-if="s.estado === 'pendiente'">
+            <q-btn
+              color="positive"
+              unelevated
+              dense
+              no-caps
+              icon="check"
+              label="Aprobar"
+              @click="cambiarEstado(s, 'aprobada')"
+            />
+            <q-btn
+              color="negative"
+              outline
+              dense
+              no-caps
+              icon="close"
+              label="Rechazar"
+              @click="cambiarEstado(s, 'rechazada')"
+            />
+          </template>
+
+          <template v-if="s.estado === 'baja_pendiente'">
+            <q-btn
+              color="deep-orange"
+              unelevated
+              dense
+              no-caps
+              icon="check"
+              label="Aceptar baja"
+              @click="cambiarEstado(s, 'baja')"
+            />
+            <q-btn
+              color="negative"
+              outline
+              dense
+              no-caps
+              icon="close"
+              label="Rechazar baja"
+              @click="cambiarEstado(s, 'aprobada')"
+            />
+          </template>
         </div>
       </div>
     </div>
@@ -91,7 +119,15 @@ const nombreDocente = computed(() =>
 function badgeEstado(estado) {
   if (estado === 'aprobada') return 'positive'
   if (estado === 'rechazada') return 'negative'
+  if (estado === 'baja') return 'grey'
+  if (estado === 'baja_pendiente') return 'deep-orange'
   return 'warning'
+}
+
+function etiquetaEstado(estado) {
+  if (estado === 'baja_pendiente') return 'Baja pendiente'
+  if (estado === 'baja') return 'Baja'
+  return estado
 }
 
 // ===== Checklist de validación =====
@@ -216,6 +252,16 @@ onMounted(cargar)
   display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+
+.solicitud-motivo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ffb07a;
 }
 
 .check--ok {

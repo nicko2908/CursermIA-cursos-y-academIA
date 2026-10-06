@@ -14,7 +14,9 @@ import AlumnoCursoDetalle from "../views/AlumnoCursoDetalle.vue"
 import MainPageDocente from "../views/MainPageDocente.vue"
 import DocenteMisCursos from "../views/DocenteMisCursos.vue"
 import DocenteTrabajos from "../views/DocenteTrabajos.vue"
+import DocenteCronograma from "../views/DocenteCronograma.vue"
 import DocenteSolicitudes from "../views/DocenteSolicitudes.vue"
+import DocenteCursoDetalle from "../views/DocenteCursoDetalle.vue"
 import LoginCoordinador from "../views/LoginCoordinador.vue"
 import MainPageCoordinador from "../views/MainPageCoordinador.vue"
 import CoordinadorCursosActivos from "../views/CoordinadorCursosActivos.vue"
@@ -48,7 +50,9 @@ const routes = [
         children:[
             {path:"", component:DocenteMisCursos},
             {path:"trabajos", component:DocenteTrabajos},
-            {path:"solicitudes", component:DocenteSolicitudes}
+            {path:"cronograma", component:DocenteCronograma},
+            {path:"solicitudes", component:DocenteSolicitudes},
+            {path:"curso/:nombre", component:DocenteCursoDetalle}
         ]
     },
     {

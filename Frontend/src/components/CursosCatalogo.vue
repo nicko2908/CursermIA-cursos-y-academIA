@@ -5,8 +5,29 @@
       Explora nuestra oferta académica y encuentra el curso que impulse tu carrera.
     </p>
 
-    <div class="cursos-grid q-mt-xl">
-      <article v-for="curso in cursos" :key="curso.nombre" class="curso-card">
+    <div class="buscador-wrap q-mt-lg">
+      <q-input
+        v-model="busqueda"
+        dark
+        outlined
+        dense
+        clearable
+        placeholder="Buscar por nombre, profe o nivel..."
+        class="buscador"
+      >
+        <template #prepend>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
+
+    <div v-if="!cursosFiltrados.length" class="sin-resultados q-mt-xl">
+      <q-icon name="search_off" size="40px" />
+      <p>No se encontraron cursos con "{{ busqueda }}".</p>
+    </div>
+
+    <div v-else class="cursos-grid q-mt-xl">
+      <article v-for="curso in cursosFiltrados" :key="curso.nombre" class="curso-card">
         <!-- Reemplaza el placeholder por tu imagen (imagen: imgVariable) -->
         <div class="curso-media">
           <img
@@ -49,6 +70,7 @@
             </div>
 
             <q-btn
+              v-if="!cursoIniciado(curso)"
               class="curso-btn"
               color="primary"
               unelevated
@@ -56,11 +78,19 @@
               label="Inscribirse"
               @click="inscribirse(curso)"
             />
+            <span v-else class="curso-cerrado">
+              <q-icon name="lock" size="15px" />
+              Ya inició
+            </span>
           </div>
 
           <div class="curso-req">
             <span><q-icon name="cake" size="15px" /> {{ curso.edadMinima }}+ años</span>
-            <span><q-icon name="groups" size="15px" /> Capacidad {{ curso.capacidad }}</span>
+            <span><q-icon name="groups" size="15px" /> Cupos {{ curso.cupos }}</span>
+            <span v-if="curso.backend" class="curso-nuevo">
+              <q-icon name="fiber_new" size="15px" />
+              Nuevo curso
+            </span>
           </div>
         </div>
       </article>
@@ -186,7 +216,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import api from '../api/axios.js'
@@ -213,6 +243,9 @@ const enviando = ref(false)
 const resumen = ref({}) // cursoNombre -> { aprobadas, pendientes, ... }
 const misSolicitudes = ref([])
 
+// Cursos creados desde el coordinador (vienen del backend)
+const cursosBackend = ref([])
+
 const opcionesId = [
   { label: 'C.C', value: 'CC' },
   { label: 'T.I', value: 'TI' },
@@ -227,7 +260,7 @@ const form = reactive({
 })
 
 function nivelDeCurso(nombre) {
-  return cursosCatalogo.find((c) => c.nombre === nombre)?.nivel || null
+  return cursosTodos.value.find((c) => c.nombre === nombre)?.nivel || null
 }
 
 // Estado de los requisitos del curso seleccionado
@@ -239,7 +272,7 @@ const req = computed(() => {
 
   const r = resumen.value[c.nombre] || {}
   const ocupados = (r.aprobadas || 0) + (r.pendientes || 0)
-  const cupos = Math.max(0, (c.capacidad || 0) - ocupados)
+  const cupos = Math.max(0, (c.cupos || 0) - ocupados)
 
   const reqNivel = nivelRequerido(c.nivel)
   const nivelOk =
@@ -260,6 +293,16 @@ async function inscribirse(curso) {
   const esAprendiz = auth.estaLogueado && auth.usuario?.rol === 'alumno'
   if (!esAprendiz) {
     router.push('/login/alumno')
+    return
+  }
+
+  // No permitir inscribirse a cursos que ya comenzaron
+  if (cursoIniciado(curso)) {
+    $q.notify({
+      type: 'warning',
+      message: 'Este curso ya comenzó; no se permiten nuevas inscripciones.',
+      position: 'top',
+    })
     return
   }
 
@@ -332,7 +375,7 @@ async function enviarSolicitud() {
     correo: form.correo,
     fechaNacimiento: auth.usuario?.fechaNacimiento || null,
     edadMinima: cursoSeleccionado.value.edadMinima,
-    capacidad: cursoSeleccionado.value.capacidad,
+    cupos: cursoSeleccionado.value.cupos,
     aceptaDatos: aceptaDatos.value,
   }
 
@@ -358,7 +401,62 @@ async function enviarSolicitud() {
   }
 }
 
-const cursos = cursosCatalogo
+// Catálogo estático + cursos creados desde el coordinador (backend)
+function normalizarCurso(c) {
+  return {
+    nombre: c.nombre,
+    docente: c.docente || '',
+    modalidad: c.modalidad || 'virtual',
+    nivel: c.nivel || 'Básico',
+    edadMinima: c.edadMinima ?? 15,
+    cupos: c.cupos ?? 45,
+    fechaInicio: c.fechaInicio ? String(c.fechaInicio).slice(0, 10) : null,
+    fechaFin: c.fechaFin ? String(c.fechaFin).slice(0, 10) : null,
+    imagen: null,
+    backend: true,
+  }
+}
+
+const cursosTodos = computed(() => [
+  ...cursosCatalogo.map((c) => ({ ...c, backend: false })),
+  ...cursosBackend.value.filter((c) => c.activo !== false).map(normalizarCurso),
+])
+
+// ¿El curso ya comenzó? (no se puede inscribir)
+function cursoIniciado(curso) {
+  if (!curso.fechaInicio) return false
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  return new Date(`${curso.fechaInicio}T00:00:00`) < hoy
+}
+
+// Búsqueda de cursos
+const busqueda = ref('')
+
+function normaliza(texto) {
+  return (texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+const cursosFiltrados = computed(() => {
+  const q = normaliza(busqueda.value.trim())
+  if (!q) return cursosTodos.value
+  return cursosTodos.value.filter((c) =>
+    normaliza(`${c.nombre} ${c.docente} ${c.nivel} ${c.modalidad}`).includes(q)
+  )
+})
+
+// Cargar cursos creados desde el coordinador (backend)
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/cursos')
+    cursosBackend.value = data || []
+  } catch (e) {
+    console.error(e)
+  }
+})
 </script>
 
 <style scoped>
@@ -382,6 +480,35 @@ const cursos = cursosCatalogo
   text-align: center;
   font-size: 1.05rem;
   color: rgba(255, 255, 255, 0.72);
+}
+
+/* Barra de búsqueda */
+.buscador-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.buscador {
+  width: 100%;
+  max-width: 460px;
+}
+
+.sin-resultados {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sin-resultados .q-icon {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.sin-resultados p {
+  margin: 0;
 }
 
 /* Grilla de cursos */
@@ -526,6 +653,24 @@ const cursos = cursosCatalogo
 
 .curso-req .q-icon {
   color: var(--color-terciario, #4f85f0);
+}
+
+.curso-cerrado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.curso-nuevo {
+  color: #6fd6ff;
+  font-weight: 600;
 }
 
 .curso-btn {

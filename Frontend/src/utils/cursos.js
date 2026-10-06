@@ -38,3 +38,13 @@ export function nivelRequerido(nivel) {
   if (nivel === 'Alto') return 'Intermedio'
   return null
 }
+
+// Promedio general de un curso (0–100), determinista a partir del nombre y el total de estudiantes
+export function promedioCurso(nombreCurso, totalEstudiantes) {
+  const n = Math.max(1, Number(totalEstudiantes) || 0)
+  let suma = 0
+  for (let i = 0; i < n; i++) {
+    suma += 55 + (hashTexto(`${nombreCurso}-est-${i}`) % 46) // 55..100
+  }
+  return Math.round(suma / n)
+}

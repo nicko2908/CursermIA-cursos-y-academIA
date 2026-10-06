@@ -48,9 +48,27 @@
                 Del {{ formatoFecha(curso.fechaInicio) }} al {{ formatoFecha(curso.fechaFin) }}
               </div>
 
-              <div class="curso-ver">
-                Ver curso
-                <q-icon name="arrow_forward" size="16px" />
+              <div v-if="curso.bajaPendiente" class="curso-baja-pendiente">
+                <q-icon name="hourglass_empty" size="15px" />
+                Baja pendiente de aprobación
+              </div>
+
+              <div class="curso-footer-row">
+                <div class="curso-ver">
+                  Ver curso
+                  <q-icon name="arrow_forward" size="16px" />
+                </div>
+                <q-btn
+                  v-if="curso.solicitudId && !curso.bajaPendiente"
+                  flat
+                  dense
+                  no-caps
+                  color="negative"
+                  icon="logout"
+                  label="Darme de baja"
+                  class="curso-baja-btn"
+                  @click.stop="abrirBaja(curso)"
+                />
               </div>
             </div>
           </article>
@@ -91,12 +109,60 @@
         />
       </div>
     </template>
+
+    <!-- Modal darse de baja -->
+    <q-dialog v-model="modalBaja" @hide="resetBaja">
+      <q-card class="modal-baja">
+        <q-card-section class="row items-center justify-between">
+          <div class="text-h6">Darme de baja</div>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section v-if="cursoBaja">
+          <div class="baja-curso">{{ cursoBaja.nombre }}</div>
+
+          <q-form ref="formBajaRef" class="q-gutter-md q-mt-md" @submit.prevent="solicitarBaja">
+            <q-input
+              v-model="motivo"
+              label="Motivo de la baja"
+              type="textarea"
+              autogrow
+              outlined
+              dense
+              lazy-rules
+              :rules="[(v) => !!v || 'Escribe el motivo de tu baja']"
+            />
+
+            <div class="baja-autorizacion">
+              <q-checkbox v-model="autoriza" dense color="primary" />
+              <span>Autorizo que deseo darme de baja de este curso.</span>
+            </div>
+          </q-form>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-px-md q-pb-md">
+          <q-btn flat no-caps label="Cancelar" v-close-popup />
+          <q-btn
+            color="negative"
+            unelevated
+            no-caps
+            label="Solicitar baja"
+            :disable="!autoriza"
+            :loading="enviandoBaja"
+            @click="solicitarBaja"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import api from '../api/axios.js'
 import { useAuthStore } from '../stores/auth.js'
 import { cursosCatalogo } from '../data/cursosCatalogo.js'
@@ -104,10 +170,20 @@ import { colorCurso } from '../utils/cursos.js'
 
 const router = useRouter()
 const auth = useAuthStore()
+const $q = useQuasar()
 
 const cursosDB = ref([])
 const solicitudes = ref([])
+const cursosBackend = ref([])
 const cargando = ref(true)
+
+// Baja de curso
+const modalBaja = ref(false)
+const cursoBaja = ref(null)
+const motivo = ref('')
+const autoriza = ref(false)
+const enviandoBaja = ref(false)
+const formBajaRef = ref(null)
 
 // Primer nombre del aprendiz para el saludo de bienvenida
 const nombreUsuario = computed(() => auth.usuario?.nombre || 'aprendiz')
@@ -131,16 +207,20 @@ const cursosInscritos = computed(() => {
   }
 
   for (const s of solicitudes.value) {
-    if (s.estado !== 'aprobada' || vistos.has(s.cursoNombre)) continue
-    const cat = cursosCatalogo.find((c) => c.nombre === s.cursoNombre)
+    if (!['aprobada', 'baja_pendiente'].includes(s.estado) || vistos.has(s.cursoNombre)) continue
+    const cat =
+      cursosCatalogo.find((c) => c.nombre === s.cursoNombre) ||
+      cursosBackend.value.find((c) => c.nombre === s.cursoNombre)
     vistos.add(s.cursoNombre)
     lista.push({
       nombre: s.cursoNombre,
       modalidad: cat?.modalidad || null,
       docente: cat?.docente || s.docenteNombre,
       nivel: cat?.nivel || null,
-      fechaInicio: cat?.fechaInicio || null,
-      fechaFin: cat?.fechaFin || null,
+      fechaInicio: cat?.fechaInicio ? String(cat.fechaInicio).slice(0, 10) : null,
+      fechaFin: cat?.fechaFin ? String(cat.fechaFin).slice(0, 10) : null,
+      solicitudId: s._id,
+      bajaPendiente: s.estado === 'baja_pendiente',
     })
   }
 
@@ -164,14 +244,59 @@ function abrirCurso(curso) {
   router.push(`/dashboard/alumno/curso/${encodeURIComponent(curso.nombre)}`)
 }
 
+async function cargar() {
+  const [resDash, resSol, resCursos] = await Promise.all([
+    api.get(`/aprendices/${auth.usuario.cedula}/dashboard`),
+    api.get(`/solicitudes/aprendiz/${auth.usuario.cedula}`),
+    api.get('/cursos'),
+  ])
+  cursosDB.value = resDash.data.cursos || []
+  solicitudes.value = resSol.data || []
+  cursosBackend.value = resCursos.data || []
+}
+
+// ===== Darse de baja =====
+function abrirBaja(curso) {
+  resetBaja()
+  cursoBaja.value = curso
+  modalBaja.value = true
+}
+
+function resetBaja() {
+  motivo.value = ''
+  autoriza.value = false
+}
+
+async function solicitarBaja() {
+  const valido = await formBajaRef.value.validate()
+  if (!valido || !autoriza.value) return
+
+  enviandoBaja.value = true
+  try {
+    await api.post(`/solicitudes/${cursoBaja.value.solicitudId}/baja`, {
+      motivo: motivo.value,
+    })
+    $q.notify({
+      type: 'positive',
+      message: 'Solicitud de baja enviada. Queda pendiente de aprobación del docente.',
+      position: 'top',
+    })
+    modalBaja.value = false
+    await cargar()
+  } catch (e) {
+    $q.notify({
+      type: 'negative',
+      message: e.response?.data?.mensaje || 'No se pudo solicitar la baja',
+      position: 'top',
+    })
+  } finally {
+    enviandoBaja.value = false
+  }
+}
+
 onMounted(async () => {
   try {
-    const [resDash, resSol] = await Promise.all([
-      api.get(`/aprendices/${auth.usuario.cedula}/dashboard`),
-      api.get(`/solicitudes/aprendiz/${auth.usuario.cedula}`),
-    ])
-    cursosDB.value = resDash.data.cursos || []
-    solicitudes.value = resSol.data || []
+    await cargar()
   } catch (e) {
     console.error(e)
   } finally {
@@ -261,15 +386,52 @@ onMounted(async () => {
   color: rgba(255, 255, 255, 0.55);
 }
 
+.curso-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
 .curso-ver {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: auto;
-  padding-top: 6px;
   color: #6fd6ff;
   font-size: 0.85rem;
   font-weight: 600;
+}
+
+.curso-baja-pendiente {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ffd166;
+}
+
+.modal-baja {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 14px;
+}
+
+.baja-curso {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.baja-autorizacion {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #616161;
 }
 
 .lista-pendientes {

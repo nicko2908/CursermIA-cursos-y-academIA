@@ -246,26 +246,26 @@ import PublicLayout from '../components/PublicLayout.vue'
 import imagenPrincipal from '../assets/hero.png'
 import fotoSebastian from '../assets/sebastianFotoCara.jpg'
 import fotoCristian from '../assets/cr7FotoCara.jpg'
+import { imagenes } from '../data/imagenes.js'
 
-// Cuando tengas las imágenes, impórtalas arriba y asígnalas en `imagen`.
 const pilares = [
   {
     titulo: 'Aprende Haciendo',
     texto:
       'Sin exámenes memorísticos. Cada módulo te reta a construir microservicios, diseñar esquemas de datos y desplegar en Kubernetes réplicas de plataformas productivas.',
-    imagen: null,
+    imagen: imagenes.fullstack,
   },
   {
     titulo: 'Acompañamiento Docente 1a1',
     texto:
       'Docentes activos en multinacionales tecnológicas revisan tus pull requests línea por línea en sesiones de feedback semanales personalizadas.',
-    imagen: null,
+    imagen: imagenes.grupo,
   },
   {
     titulo: 'Certificación con Respaldo',
     texto:
       'Títulos con hash criptográfico y código QR de validación instantánea para plataformas como LinkedIn y reclutadores de talento técnico global.',
-    imagen: null,
+    imagen: imagenes.profesor,
   },
 ]
 
@@ -275,27 +275,27 @@ const cursosDestacados = [
     descripcion:
       'Aprende a recolectar, limpiar e interpretar datos para tomar decisiones con evidencia. Domina técnicas cualitativas y cuantitativas aplicadas a casos reales.',
     modalidad: 'virtual',
-    fechaInicio: '2026-08-15',
-    fechaFin: '2026-12-20',
-    imagen: null, // importa tu imagen y asígnala aquí
+    fechaInicio: '2026-07-06',
+    fechaFin: '2026-12-12',
+    imagen: imagenes.analisis,
   },
   {
     nombre: 'Fundamentos de desarrollo full stack',
     descripcion:
       'Construye aplicaciones completas: maquetación, APIs, bases de datos y despliegue. Un recorrido práctico por frontend y backend con proyectos reales.',
     modalidad: 'presencial',
-    fechaInicio: '2026-06-03',
-    fechaFin: '2026-12-20',
-    imagen: null,
+    fechaInicio: '2026-06-01',
+    fechaFin: '2026-12-10',
+    imagen: imagenes.fullstack,
   },
   {
     nombre: 'Kotlin para Android Studio',
     descripcion:
       'Desarrolla apps nativas para Android desde cero con Kotlin y Android Studio: interfaces, arquitectura, consumo de APIs y publicación en Play Store.',
     modalidad: 'presencial',
-    fechaInicio: '2026-07-10',
-    fechaFin: '2026-12-20',
-    imagen: null,
+    fechaInicio: '2026-07-20',
+    fechaFin: '2026-12-05',
+    imagen: imagenes.mecanica,
   },
 ]
 

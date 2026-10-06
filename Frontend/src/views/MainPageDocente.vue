@@ -17,6 +17,7 @@
         >
           <q-route-tab to="/dashboard/docente" exact label="Mis cursos" no-caps />
           <q-route-tab to="/dashboard/docente/trabajos" label="Trabajos asignados" no-caps />
+          <q-route-tab to="/dashboard/docente/cronograma" label="Cronograma" no-caps />
           <q-route-tab to="/dashboard/docente/solicitudes" label="Solicitudes" no-caps />
         </q-tabs>
 

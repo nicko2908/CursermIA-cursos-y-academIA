@@ -31,6 +31,42 @@ const cursoSchema = new Schema(
         message: 'La modalidad debe ser "virtual" o "presencial"',
       },
     },
+    docente: {
+      type: String,
+      required: [true, 'El docente es obligatorio'],
+      trim: true,
+    },
+    cupos: {
+      type: Number,
+      default: 45,
+      min: [1, 'Debe haber al menos 1 cupo'],
+      max: [45, 'Como máximo 45 cupos por curso'],
+    },
+    nivel: {
+      type: String,
+      enum: ['Básico', 'Intermedio', 'Alto'],
+      default: 'Básico',
+    },
+    edadMinima: {
+      type: Number,
+      default: 15,
+    },
+    activo: {
+      type: Boolean,
+      default: true,
+    },
+    // Horario semanal: [{ dia: 1 (lunes) … 5 (viernes), horaInicio: 'HH:mm', horaFin: 'HH:mm' }]
+    horario: {
+      type: [
+        {
+          _id: false,
+          dia: { type: Number, min: 1, max: 5 },
+          horaInicio: { type: String },
+          horaFin: { type: String },
+        },
+      ],
+      default: [],
+    },
   },
   {
     timestamps: true,

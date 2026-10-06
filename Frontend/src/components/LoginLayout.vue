@@ -35,20 +35,21 @@
 
 <script setup>
 import LoginRoleSwitch from './LoginRoleSwitch.vue'
+import { imagenes as imagenesAssets } from '../data/imagenes.js'
 
 defineProps({
   // Mostrar el interruptor Aprendiz/Docente/Coordinador (oculto en el registro)
   conSwitch: { type: Boolean, default: true },
 })
 
-// Carga automáticamente TODAS las imágenes que coloques en src/assets/login/
-// (png, jpg, jpeg, webp, svg o gif). No hay que importarlas una por una.
+// Imágenes adicionales que coloques en src/assets/login/ (opcional)
 const modulos = import.meta.glob('../assets/login/*.{png,jpg,jpeg,webp,svg,gif}', {
   eager: true,
   import: 'default',
 })
 
-const imagenes = Object.values(modulos)
+// "Jóvenes estudiando" + las que haya en src/assets/login/
+const imagenes = [imagenesAssets.jovenes, ...Object.values(modulos)].filter(Boolean)
 </script>
 
 <style scoped>

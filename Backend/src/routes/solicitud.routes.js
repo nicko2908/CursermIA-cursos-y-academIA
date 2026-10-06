@@ -4,6 +4,7 @@ import {
   getSolicitudes,
   getSolicitudesAprendiz,
   getSolicitudesDocente,
+  solicitarBaja,
   updateEstadoSolicitud,
   getResumenSolicitudes,
 } from '../controllers/solicitud.controller.js'
@@ -16,5 +17,6 @@ router.get('/resumen', getResumenSolicitudes)
 router.get('/aprendiz/:cedula', getSolicitudesAprendiz)
 router.get('/docente/:nombre', getSolicitudesDocente)
 router.put('/:id/estado', updateEstadoSolicitud)
+router.post('/:id/baja', solicitarBaja)
 
 export default router

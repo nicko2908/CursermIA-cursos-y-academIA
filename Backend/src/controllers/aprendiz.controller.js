@@ -2,6 +2,7 @@ import Aprendiz from '../models/Aprendiz.js'
 import Curso from '../models/Curso.js'
 import Trabajo from '../models/Trabajo.js'
 import Entrega from '../models/Entrega.js'
+import Solicitud from '../models/Solicitud.js'
 
 // ===== CRUD de aprendices =====
 
@@ -108,6 +109,42 @@ export const loginAprendiz = async (req, res) => {
 }
 
 // ===== Dashboard del aprendiz =====
+
+// GET /api/aprendices/:cedula/tareas
+// Tareas de los cursos en los que está inscrito (solicitudes aprobadas), con su estado de entrega.
+export const getTareasAprendiz = async (req, res) => {
+  try {
+    const cedula = req.params.id
+
+    // Cursos aprobados del aprendiz (una baja pendiente sigue contando como inscrito)
+    const solicitudes = await Solicitud.find({
+      aprendizCedula: cedula,
+      estado: { $in: ['aprobada', 'baja_pendiente'] },
+    })
+    const cursos = solicitudes.map((s) => s.cursoNombre)
+
+    // Trabajos de esos cursos
+    const trabajos = await Trabajo.find({ cursoNombre: { $in: cursos } }).sort({ fechaLimite: 1 })
+
+    // Entregas del aprendiz (por trabajo)
+    const entregas = await Entrega.find({ aprendiz: cedula })
+    const mapa = {}
+    for (const e of entregas) mapa[String(e.trabajo)] = e
+
+    const resultado = trabajos.map((t) => {
+      const entrega = mapa[String(t._id)] || null
+      return {
+        ...t.toObject(),
+        entregado: !!entrega,
+        entrega,
+      }
+    })
+
+    res.json(resultado)
+  } catch (error) {
+    res.status(500).json({ mensaje: 'Error al obtener las tareas', error: error.message })
+  }
+}
 
 // GET /api/aprendices/:id/dashboard
 // Devuelve los cursos a los que pertenece y los trabajos que debe (con estado).
